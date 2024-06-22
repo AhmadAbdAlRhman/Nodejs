@@ -1,0 +1,21 @@
+//The Update 
+=> API -> updateProfile
+=> API -> getProfile 
+=> API -> send email after five days from buy products
+=> API -> fix the login 
+=> API -> fix the register
+=> API -> addToCard
+=> API -> changeQuantity
+=> API -> search
+
+
+
+
+
+
+
+later
+=> API -> deleteProduct
+=> API -> Aprior
+=> API -> actually paid
+=> API -> actually rate 
