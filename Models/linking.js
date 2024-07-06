@@ -2,6 +2,7 @@
 const product = require("./product");
 const customer = require("./customer");
 const Store = require('./Store');
+const Rahaf = require('./rahaf');
 const order = require('./Order');
 const product_image = require('./Product_image');
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/

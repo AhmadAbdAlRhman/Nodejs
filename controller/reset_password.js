@@ -5,7 +5,6 @@ const customer = require("../Models/customer");
 //This is to send the token to the email that passed in body
 module.exports.sendToken = (req, res, next) => {
   const email = req.body.email;
-  console.log(email);
   customer.findOne({ where: { email } }).then((user) => {
     if (!user) {
       return res.status(404).json({ message: "user not found" });
@@ -19,15 +18,15 @@ module.exports.sendToken = (req, res, next) => {
         port: 465,
         secure: true,
         auth: {
-          user: "",
-          pass: "",
+          user: "ahmadhajnajeeb45@gmail.com",
+          pass: "lzjjttuyhkyyjjrq",
         },
         tls: {
           rejectUnauthorized: true,
         },
       });
       const mailOptions = {
-        form: "",
+        form: "ahmadhajnajeeb45@gmail.com",
         to: email,
         subject: "password reset",
         html: `click <a href="http://localhost:3000/${token}">here</a> to confirm your identity to reset your password`,

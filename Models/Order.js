@@ -13,6 +13,11 @@ const Order = sequelize.define("order", {
     allowNull: false,
     unique: false,
   },
+  purchase : {
+    type: Sequelize.BIGINT,
+    allowNull: true,
+    defaultValue : 0
+  },
   date: {
     type: Sequelize.DATE,
     allowNull: false,

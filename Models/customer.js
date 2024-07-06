@@ -13,7 +13,7 @@ const Customer = sequelize.define("customer", {
   },
   second_name: {
     type: Sequelize.STRING,
-    allowNull: true,
+    allowNull: false,
   },
   email: {
     type: Sequelize.STRING,

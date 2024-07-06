@@ -67,13 +67,11 @@ module.exports.postLogin = (req, res, next) => {
   });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.postRegister = (req, res, next) => {
+module.exports.postRegister = (req, res, _next) => {
   const namy = req.body.firstName;
   const Sname = "req.body.lastName";
   const email = req.body.email;
   const password = req.body.password;
-  const phoneNumber = req.body.phone;
-  const addressy = req.body.address;
   Customer.findOne({ where: { email: email } }).then((user) => {
     if (user) {
       return res.json({ result: "This email is already exists" });
@@ -88,8 +86,6 @@ module.exports.postRegister = (req, res, next) => {
               second_name: Sname,
               email: email,
               password: hashedPassword,
-              telephone: phoneNumber,
-              address: addressy,
             };
             await Customer.create(userData)
               .then((user) => {

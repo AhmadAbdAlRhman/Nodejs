@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const AuthStore = require("../controller/Auth/store");
 const store = require("../controller/store");
+const cont = require("../controller/Aprior");
 const router = express.Router();
 const FILE_TYPE_MAM = {
   "image/png": "png",
@@ -32,8 +33,12 @@ const storage = multer.diskStorage({
 const uploadOption = multer({ storage: storage });
 //API for Store
 router.post("/create-store", AuthStore.postCreateStore);
-router.post("/AddProduct/:storeId",
-  uploadOption.single("image"),
+router.post(
+  "/AddProduct/:storeId",
+  uploadOption.fields([
+    { name: "image", maxCount: 1 },
+    { name: "OptionImage", maxCount: 7 },
+  ]),
   AuthStore.postAddProduct
 );
 
@@ -46,6 +51,14 @@ router.get("/searchProduct", store.getSearch);
 
 router.post("/paid",store.postpaid);
 router.post("/rate", store.postRate);
-
+router.get("/rahaf", store.rahaf);
 router.get("/AllProduct", store.getAllProducts);
+router.get("/MyWallet" , store.getCard);
+router.post("/deleteProductFromCard", store.deleteProductFromCard);
+router.post("/deleteCard" , store.deleteCard);
+router.post("/deleteProductFromStore", store.deleteProductFromStore);
+router.post("/updateProduct",store.updateProduct);
+router.get("/getProfile", store.getProfile);
+//-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+router.get("/ord" , cont.aprior);
 module.exports = router;

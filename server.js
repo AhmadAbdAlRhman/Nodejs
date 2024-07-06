@@ -10,7 +10,6 @@ const cors = require("cors");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 const sequelize = require("./config/database");
 require("./Models/linking");
-require("./controller/schedule");
 require('dotenv').config();
 const port = 3000;
 const corsOption = {

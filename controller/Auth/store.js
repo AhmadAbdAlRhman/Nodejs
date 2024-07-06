@@ -1,6 +1,7 @@
 const Store = require("../../Models/Store");
 const product = require("../../Models/product");
 const cus = require("../../Models/customer");
+const images = require("../../Models/Product_image");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
@@ -10,7 +11,7 @@ const createToken = (id) => {
   });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.postCreateStore = (req, res, next) => {
+module.exports.postCreateStore = (req, res, _next) => {
   console.log(req.body);
   const StoreName = req.body.StoreName;
   // const fileName = req.file.filename;
@@ -57,41 +58,37 @@ module.exports.postCreateStore = (req, res, next) => {
   });
 };
 
-module.exports.postAddProduct = (req, res, next) => {
+module.exports.postAddProduct = async (req, res, _next) => {
   const SId = req.params.storeId;
   const productName = req.body.productName;
   const productCount = req.body.productCount;
   const productPrice = req.body.productPrice;
-  const photo_data = req.file.filename;
-  console.log(req.body);
-  product.findOne({ where: { name: productName } }).then((pro) => {
-    if (pro) {
-      res.status(400).json("This product  already exists");
-    } else {
-      const productsData = {
-        name: productName,
-        count: productCount,
-        price: productPrice,
-        photo_data: `${photo_data}`,
-        StoreId: SId,
+  const photo_data = req.files["image"][0].filename;
+  const productsData = {
+    name: productName,
+    count: productCount,
+    price: productPrice,
+    photo_data: `${photo_data}`,
+    StoreId: SId,
+  };
+  try{
+  await product.create(productsData).then(async (newPro)=>{
+    const optionImages = req.files["OptionImage"] || [];
+    const imagePromises = optionImages.map(file => {
+      const photoData = {
+        imageUrl: file.filename,
+        productId:newPro.id
       };
-      product
-        .create(productsData)
-        .then((result) => {
-          const token = createToken(SId);
-          res.cookie("jwt", token, {
-            httpOnly: true,
-            maxAge: 3 * 24 * 60 * 60 * 1000,
-          });
-          res
-            .status(200)
-            .json(`This product is saved in the store that id ${SId}`);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    }
-  });
+      images.create(photoData)
+    });
+    await Promise.all(imagePromises);
+  }).then(()=>{
+    res.status(200).json("The Product is added");
+  })
+}
+  catch(err){
+    res.status(405).json(`There is an err ${err} that mot allowed`);
+  };
 };
 
 module.exports.getStore = (req, res, next) => {
