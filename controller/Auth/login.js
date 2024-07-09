@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 //handleErrors
-const handleErrors = (err) => {
+const _handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { email: "", password: "" };
   //deplicate error code
@@ -26,7 +26,7 @@ const createToken = (id) => {
     expiresIn: "1h",
   });
 };
-module.exports.postLogin = (req, res, next) => {
+module.exports.postLogin = (req, res, _next) => {
   const email = req.body.email;
   const password = req.body.password;
   Seller.findOne({ where: { email: email } }).then(async (seller) => {
@@ -38,7 +38,7 @@ module.exports.postLogin = (req, res, next) => {
           httpOnly: true,
           // maxAge: "1h",
         });
-        res.status(200).json({ seller ,token });
+        res.status(200).json({ seller, token });
       } else {
         res.status(404).json({ result: "Not Found" });
       }
@@ -56,9 +56,8 @@ module.exports.postLogin = (req, res, next) => {
               httpOnly: true,
               // maxAge: "2h",
             });
-            res.status(200).json({ customer , token});
-          }
-          else {
+            res.status(200).json({ customer, token });
+          } else {
             res.status(404).json({ result: "Not Found" });
           }
         }
@@ -78,7 +77,7 @@ module.exports.postRegister = (req, res, _next) => {
     } else {
       Seller.findOne({ where: { email: email } }).then((user) => {
         if (user) {
-          return res.json({ result: "This email is already exists" });  
+          return res.json({ result: "This email is already exists" });
         } else {
           bcrypt.hash(password, 10).then(async (hashedPassword) => {
             const userData = {
@@ -98,7 +97,7 @@ module.exports.postRegister = (req, res, _next) => {
                   httpOnly: true,
                   // maxAge: '2h',
                 });
-                res.status(200).json({user,token});
+                res.status(200).json({ user, token });
               })
               .catch((err) => {
                 console.log(err);
@@ -111,7 +110,7 @@ module.exports.postRegister = (req, res, _next) => {
   });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.postUpdateProfile = (req, res, next) => {
+module.exports.postUpdateProfile = (req, res, _next) => {
   const userId = req.cookies.userId;
   const first_name = req.body.firstName;
   const second_name = req.body.lastName;
@@ -141,8 +140,23 @@ module.exports.postUpdateProfile = (req, res, next) => {
     });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.getLogout = (req, res, next) => {
+module.exports.getLogout = (_req, res, _next) => {
   res.clearCookie("jwt");
   res.json({ result: "you are not Authenticated now" });
+};
+/*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
+module.exports.postPhotoProfile = (req, res, _next) => {
+  const userId = 6;//req.cookies.userId;
+  const photo = req.file.filename;
+  Customer.findOne({ where: { id: userId } }).then((user) => {
+    user
+      .update({ photo: photo })
+      .then(() => {
+        res.json({ result: "Success" });
+      })
+      .catch(() => {
+        res.json({ result: "Failed" });
+      });
+  });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/

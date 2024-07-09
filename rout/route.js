@@ -46,4 +46,7 @@ router.get("/logout", control.getLogout);
 router.post("/sendToken" , password.sendToken);
 //change Password
 router.post("/changePassword/:token" , password.reSetPassword);
+//add profile photo
+router.post("/profilePhoto",uploadOption.single("profilePhoto"),control.postPhotoProfile);
+
 module.exports = router;
