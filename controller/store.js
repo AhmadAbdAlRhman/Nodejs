@@ -2,19 +2,34 @@ const product = require("../Models/product");
 const Store = require("../Models/Store");
 const Order = require("../Models/Order");
 const Customer = require("../Models/customer");
+const Image_product = require("../Models/Product_image");
 const sequelize = require("sequelize");
 const rahaf = require("../Models/rahaf");
-module.exports.getAllProducts = (_req, res, _next) => {
-  product
-    .findAll({
-      include: [{ model: Store, attributes: ["StoreName"] }],
-    })
-    .then((prod) => {
-      res.json({ prod });
-    })
-    .catch((err) => {
-      res.json({ result: err });
+module.exports.getAllProducts = async (_req, res, _next) => {
+  try {
+    const products = await product.findAll({
+      include: {
+        model: Store,
+        attributes: ["StoreName"],
+      },
     });
+    console.log("Fetched Products: ", products);
+    const productsWithImages = await Promise.all(
+      products.map(async (product) => {
+        const images = await Image_product.findAll({
+          where: { productId: product.id },
+        });
+        console.log(`Product ID: ${product.id} Images: `, images);
+        return { ...product.toJSON(), images };
+      })
+    );
+    res.json(productsWithImages);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching products" });
+  }
 };
 module.exports.addToCard = (req, res, _next) => {
   const userId = 6; //req.cookies.userId
@@ -135,7 +150,7 @@ module.exports.postRate = (req, _res, _next) => {
   });
 };
 module.exports.getCard = (_req, res, _next) => {
-  const userId = 1; //req.cookies.customerId;
+  const userId = 1; //req.cookies.userId;
   Order.findAll({
     where: { customerId: userId },
     include: [{ model: product, attributes: ["name", "price"] }],
@@ -221,15 +236,17 @@ module.exports.updateProduct = (req, res, _next) => {
       res.status(405).json({ message: `There is an error ${err} that not` });
     });
 };
-module.exports.getProfile = (req , res ,next)=>{
+module.exports.getProfile = (req, res, _next) => {
   const userId = req.cookies.userId;
-  Customer.findAll({where:{id:userId}}).then((user)=>{
-    res.json(user);
-  }).catch((err)=>{
-    res.json(`There is an err${err}`);
-  })
-}
-module.exports.rahaf = (req, res, next) => {
+  Customer.findAll({ where: { id: userId } })
+    .then((user) => {
+      res.json(user);
+    })
+    .catch((err) => {
+      res.json(`There is an err${err}`);
+    });
+};
+module.exports.rahaf = (_req, res, _next) => {
   rahaf.findAll().then((result) => {
     res.setHeader("Content-Type", "application/json");
     res.json(result);

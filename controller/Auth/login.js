@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 //handleErrors
-const _handleErrors = (err) => {
+const handleErrors = (err) => {
   console.log(err.message, err.code);
   let errors = { email: "", password: "" };
   //deplicate error code
@@ -60,6 +60,8 @@ module.exports.postLogin = (req, res, _next) => {
           } else {
             res.status(404).json({ result: "Not Found" });
           }
+        } else {
+          res.status(404).json({ result: "Not Found" });
         }
       });
     }
