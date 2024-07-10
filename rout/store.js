@@ -51,7 +51,6 @@ router.get("/searchProduct", store.getSearch);
 
 router.post("/paid",store.postpaid);
 router.post("/rate", store.postRate);
-router.get("/rahaf", store.rahaf);
 router.get("/AllProduct", store.getAllProducts);
 router.get("/MyWallet" , store.getCard);
 router.post("/deleteProductFromCard", store.deleteProductFromCard);

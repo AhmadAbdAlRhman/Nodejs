@@ -246,9 +246,3 @@ module.exports.getProfile = (req, res, _next) => {
       res.json(`There is an err${err}`);
     });
 };
-module.exports.rahaf = (_req, res, _next) => {
-  rahaf.findAll().then((result) => {
-    res.setHeader("Content-Type", "application/json");
-    res.json(result);
-  });
-};
