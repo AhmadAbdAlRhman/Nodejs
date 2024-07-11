@@ -6,3 +6,6 @@
 => API -> updateProduct
 => API -> getProfile
 => API -> return information in getCard 
+=> API -> Rating 
+=> API -> show optional image
+=> API -> search 
