@@ -1,7 +1,5 @@
 /node_modules
-/images
-/main.dart
-/.gitignore
+.gitignore
 /controller/rahaf.js
-/rout/rahaf.js
-/.vscode
+rout/rahaf.js
+.vscode
