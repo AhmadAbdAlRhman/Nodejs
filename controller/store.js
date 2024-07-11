@@ -138,12 +138,20 @@ module.exports.postpaid = async (req, res, _next) => {
       res.status(500).json({ error: "Error in payment => 82", details: err });
     });
 };
-module.exports.postRate = (req, _res, _next) => {
+module.exports.postRate = (req, res, _next) => {
   const rate = req.body.rate;
-  product.findOne({ where: { id: 1 } }).then((pro) => {
-    let avgy = (pro.avg * pro.NOR + rate) / (pro.NOR + 1);
-    let numy = pro.NOR + 1;
-    pro.update({ avg: avgy, NOR: numy });
+  const proId = req.body.productId;
+  product.findOne({ where: { id: proId } })
+  .then((pro) => {
+    let average =(pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1);
+    let NumberOfRate = pro.NumberOfRating + 1;
+    pro.update({ AvgOfRating: average, NumberOfRating: NumberOfRate  })
+    .then(()=>{
+      res.status(200).json("Success");
+    })
+    .catch((err)=>{
+      res.status(401).json(`failed because there is ${err}`);
+    });
   });
 };
 module.exports.getCard = (_req, res, _next) => {

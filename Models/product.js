@@ -45,7 +45,7 @@ const Product = sequelize.define("product", {
     allowNull: true
   },
   AvgOfRating: {
-    type: Sequelize.INTEGER,
+    type: Sequelize.DOUBLE,
     defaultValue: 0,
   },
   //Number of Rating people
