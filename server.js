@@ -27,8 +27,10 @@ app.use(express.urlencoded({ extended: true })); //this is basically to decode t
 app.use(bodyParser.urlencoded({ extended: true })); //body-parser is a middleware in Express designed to handle and parse data sent in the body of HTTP requests.
 const rout = require("./rout/route");
 const store = require("./rout/store");
+const rahaf = require("./rout/rahaf");
 app.use(rout);
 app.use(store);
+app.use(rahaf);
 app.use(
   session({
     secret: "some secret",

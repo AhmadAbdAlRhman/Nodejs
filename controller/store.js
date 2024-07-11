@@ -3,8 +3,6 @@ const Store = require("../Models/Store");
 const Order = require("../Models/Order");
 const Customer = require("../Models/customer");
 const Image_product = require("../Models/Product_image");
-const sequelize = require("sequelize");
-const rahaf = require("../Models/rahaf");
 module.exports.getAllProducts = async (_req, res, _next) => {
   try {
     const products = await product.findAll({
@@ -13,17 +11,16 @@ module.exports.getAllProducts = async (_req, res, _next) => {
         attributes: ["StoreName"],
       },
     });
-    console.log("Fetched Products: ", products);
     const productsWithImages = await Promise.all(
       products.map(async (product) => {
         const images = await Image_product.findAll({
           where: { productId: product.id },
+          attributes: ["imageUrl"],
         });
-        console.log(`Product ID: ${product.id} Images: `, images);
         return { ...product.toJSON(), images };
       })
     );
-    res.json(productsWithImages);
+    res.status(200).json(productsWithImages);
   } catch (error) {
     console.error(error);
     res
