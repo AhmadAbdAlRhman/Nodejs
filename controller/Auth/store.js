@@ -91,7 +91,7 @@ module.exports.postAddProduct = async (req, res, _next) => {
   };
 };
 
-module.exports.getStore = (req, res, next) => {
+module.exports.getStore = (req, res, _next) => {
   const sid = req.params.id;
   product.findAll({ where: { StoreId: sid } }).then((producty) => {
     Store.findOne({ where: { id: sid } }).then((store) => {
@@ -101,7 +101,7 @@ module.exports.getStore = (req, res, next) => {
   });
 };
 
-module.exports.getStores = (req, res, next) => {
+module.exports.getStores = (_req, res, _next) => {
   // const sid = req.cookies.storeId;
   Store.findAll().then((store) => {
     res.json({ stores: store });

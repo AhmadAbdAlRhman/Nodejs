@@ -1,11 +1,11 @@
 /*import the table*/
 const product = require("./product");
 const customer = require("./customer");
-const Store = require('./Store');
-require('./rahaf'),
-require('./testRahaf');
-const order = require('./Order');
-const product_image = require('./Product_image');
+const Store = require("./Store");
+const question = require("./rahaf");
+const test = require("./testRahaf");
+const order = require("./Order");
+const product_image = require("./Product_image");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 //link between the table
 Store.hasMany(product, { as: "products", foreignKey: "StoreId" });
@@ -19,3 +19,6 @@ order.belongsTo(product);
 
 product.hasMany(product_image, { as: "image", foreignKey: "productId" }); //one to many relationship from cart to user
 product_image.belongsTo(product);
+
+test.hasMany(question, { as: "test", foreignKey: "testId" });
+question.belongsTo(test);

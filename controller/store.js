@@ -1,4 +1,5 @@
 const product = require("../Models/product");
+const { Sequelize, Op } = require("sequelize");
 const Store = require("../Models/Store");
 const Order = require("../Models/Order");
 const Customer = require("../Models/customer");
@@ -99,11 +100,14 @@ module.exports.changeQuantity = (req, res, _next) => {
         .json({ error: "Error updating order => 67", details: err });
     });
 };
-module.exports.getSearch = (req, res, _next) => {
-  const nameProduct = req.body.nameProduct;
-  product
+module.exports.getSearch = async (req, res, _next) => {
+  const nameProduct = req.query.nameProduct;
+  // res.json(nameProduct);
+  await product
     .findAll({
-      where: { name: nameProduct },
+      where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
+        [Op.like]: `%${nameProduct.toLowerCase()}%`,
+      }),
       include: [{ model: Store, attributes: ["StoreName"] }],
     })
     .then((allProduct) => {
@@ -141,17 +145,18 @@ module.exports.postpaid = async (req, res, _next) => {
 module.exports.postRate = (req, res, _next) => {
   const rate = req.body.rate;
   const proId = req.body.productId;
-  product.findOne({ where: { id: proId } })
-  .then((pro) => {
-    let average =(pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1);
+  product.findOne({ where: { id: proId } }).then((pro) => {
+    let average =
+      (pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1);
     let NumberOfRate = pro.NumberOfRating + 1;
-    pro.update({ AvgOfRating: average, NumberOfRating: NumberOfRate  })
-    .then(()=>{
-      res.status(200).json("Success");
-    })
-    .catch((err)=>{
-      res.status(401).json(`failed because there is ${err}`);
-    });
+    pro
+      .update({ AvgOfRating: average, NumberOfRating: NumberOfRate })
+      .then(() => {
+        res.status(200).json("Success");
+      })
+      .catch((err) => {
+        res.status(401).json(`failed because there is ${err}`);
+      });
   });
 };
 module.exports.getCard = (_req, res, _next) => {

@@ -35,6 +35,10 @@ const Rahaf = sequelize.define("rahaf", {
   answer: {
     type: Sequelize.STRING,
     allowNull: false,
-  }
+  },
+  testId: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
 });
 module.exports = Rahaf;
