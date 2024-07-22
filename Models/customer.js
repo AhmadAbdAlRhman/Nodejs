@@ -29,7 +29,7 @@ const Customer = sequelize.define("customer", {
     unique: true,
   },
   telephone: {
-    type: Sequelize.INTEGER,
+    type: Sequelize.STRING(100),
     allowNull:true,
     unique: true,
   },

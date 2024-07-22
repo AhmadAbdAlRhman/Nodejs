@@ -49,7 +49,7 @@ const Store = sequelize.define("Store", {
     unique: true,
   },
   SellerPhone: {
-    type: Sequelize.STRING,
+    type: Sequelize.STRING(100),
     AllowNull: true,
     unique: true,
   },

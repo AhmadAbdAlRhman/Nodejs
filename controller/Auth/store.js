@@ -14,17 +14,11 @@ const createToken = (id) => {
 module.exports.postCreateStore = (req, res, _next) => {
   console.log(req.body);
   const StoreName = req.body.StoreName;
-  // const fileName = req.file.filename;
-  // const basePath = `${req.protocol}://${req.get("host")}/images`;
-  // const StoreAge = req.body.StoreAge;
-  // const StoreLocation = req.body.StoreLocation;
   const StoreKind = req.body.storeKind;
   const SellerName = req.body.sellerName;
   const SellerEmail = req.body.sellerEmail;
   const SellerPassword = req.body.password;
   const SellerPhone = req.body.sellerPhone;
-  // const NOF = req.body.NumberOfFollowers;
-  // const NOE = req.body.NumbersOfEmployees;
   Store.findOne({ where: { email: SellerEmail } }).then((store) => {
     if (store) {
       return res.status(400).json("This Store is already exists");
@@ -32,23 +26,18 @@ module.exports.postCreateStore = (req, res, _next) => {
       bcrypt.hash(SellerPassword, 10).then((hashedPassword) => {
         const StoreData = {
           StoreName: StoreName,
-          // StoreLogo: `${basePath}${fileName}`,
-          // StoreAge,
-          // StoreLocation,
           StoreKind: StoreKind,
           SellerName: SellerName,
           email: SellerEmail,
           password: hashedPassword,
           SellerPhone: SellerPhone,
-          // NumberOfFollowers: NOF,
-          // NumberOfEmpty: NOE,
         };
         Store
           .create(StoreData)
           .then((store) => {
             const storeId = store.id;
             const token = createToken(storeId);
-            res.json({ "result": store });
+            res.json({ "result": store , token });
           })
           .catch((err) => {
             res.status(400).json(err);
@@ -72,6 +61,7 @@ module.exports.postAddProduct = async (req, res, _next) => {
     StoreId: SId,
   };
   try{
+    console.log(productsData);
   await product.create(productsData).then(async (newPro)=>{
     const optionImages = req.files["OptionImage"] || [];
     const imagePromises = optionImages.map(file => {

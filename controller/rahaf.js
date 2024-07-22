@@ -22,7 +22,6 @@ module.exports.getTests = (req, res, next) => {
     });
 };
 
-
 module.exports.getest = (req, res, _next) => {
   const tId = req.params.testId;
   rahaf
@@ -48,6 +47,7 @@ module.exports.deleteTest = (req, res, _next) => {
 };
 
 module.exports.addQuestion = (req, res, next) => {
+  console.log(req.params.testId);
   const QuestionData = {
     questions: req.body.question,
     option1: req.body.op1,
@@ -58,10 +58,25 @@ module.exports.addQuestion = (req, res, next) => {
     answer: req.body.ans,
     testId: req.params.testId,
   };
-  rahaf.create(QuestionData)
-  .then((result)=>{
-    res.json(result)
-  }).catch((err) => {
-    res.json(err);
-  })
-}
+  console.log(QuestionData);
+  rahaf
+    .create(QuestionData)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+};
+
+module.exports.questionById = (req, res, next) => {
+  const qId = req.params.questionId;
+  rahaf
+    .findAll({ where: { id: qId } })
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+};

@@ -7,4 +7,5 @@ router.get("/test/:testId", rahaf.getest);
 router.post("/test",rahaf.addTest);
 router.post("/deletTest/:testId", rahaf.deleteTest);
 router.post("/addQuestion/:testId",rahaf.addQuestion);
+router.get("/question/:questionId", rahaf.questionById);
 module.exports = router;

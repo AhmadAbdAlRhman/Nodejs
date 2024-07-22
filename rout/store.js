@@ -47,7 +47,7 @@ router.get("/store/:id", AuthStore.getStore);
 
 router.post("/order", store.addToCard);
 router.post("/changeQuantity", store.changeQuantity);
-router.get("/searchProduct", store.getSearch);
+router.get("/searchProduct/:nameProduct", store.getSearch);
 
 router.post("/paid",store.postpaid);
 router.post("/rate", store.postRate);
@@ -58,6 +58,8 @@ router.post("/deleteCard" , store.deleteCard);
 router.post("/deleteProductFromStore", store.deleteProductFromStore);
 router.post("/updateProduct",store.updateProduct);
 router.get("/getProfile", store.getProfile);
+// router.get("/store")
 //-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 router.get("/ord" , cont.aprior);
+router.get("/example", cont.createIteams);
 module.exports = router;

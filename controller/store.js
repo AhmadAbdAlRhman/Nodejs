@@ -30,11 +30,11 @@ module.exports.getAllProducts = async (_req, res, _next) => {
   }
 };
 module.exports.addToCard = (req, res, _next) => {
-  const userId = 6; //req.cookies.userId
+  const userId = req.cookies.userId;
   const proId = req.body.productId;
   Order.findAll({
     where: { customerId: userId, productId: proId, paid: false },
-  })
+  })//
     .then((order) => {
       if (order.length === 0) {
         const OrderData = {
@@ -101,31 +101,42 @@ module.exports.changeQuantity = (req, res, _next) => {
     });
 };
 module.exports.getSearch = async (req, res, _next) => {
-  const nameProduct = req.query.nameProduct;
-  // res.json(nameProduct);
-  await product
-    .findAll({
+  const nameProduct = req.params.nameProduct;
+  try {
+    const allProduct = await product.findAll({
       where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
         [Op.like]: `%${nameProduct.toLowerCase()}%`,
       }),
       include: [{ model: Store, attributes: ["StoreName"] }],
-    })
-    .then((allProduct) => {
-      if (!allProduct || allProduct.length === 0) {
-        return res.send("No Products Found");
-      } else {
-        return res.status(200).json({ allProduct });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
     });
+    if (!allProduct || allProduct.length === 0) {
+      return res.send("No Products Found");
+    } else {
+      const productsWithImages = await Promise.all(
+        allProduct.map(async (product) => {
+          const images = await Image_product.findAll({
+            where: { productId: product.id },
+            attributes: ["imageUrl"],
+          });
+          return { ...product.toJSON(), images };
+        })
+      );
+      res.status(200).json(productsWithImages);
+    }
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching products" });
+  }
 };
 module.exports.postpaid = async (req, res, _next) => {
   const userId = req.body.userId;
   var maxPurchase = await Order.max("purchase");
   var x = ++maxPurchase;
-  Order.findAll({ where: { customerId: userId && paid === false } })
+  Order.findAll({
+    where: { [Op.and]: [{ customerId: userId }, { Paid: false }] },
+  })
     .then((order) => {
       order.forEach((ord) => {
         ord.Paid = true;
@@ -159,8 +170,8 @@ module.exports.postRate = (req, res, _next) => {
       });
   });
 };
-module.exports.getCard = (_req, res, _next) => {
-  const userId = 1; //req.cookies.userId;
+module.exports.getCard = (req, res, _next) => {
+  const userId = req.cookies.userId;
   Order.findAll({
     where: { customerId: userId },
     include: [{ model: product, attributes: ["name", "price"] }],
@@ -173,7 +184,7 @@ module.exports.getCard = (_req, res, _next) => {
     });
 };
 module.exports.deleteProductFromCard = (req, res, _next) => {
-  const userId = 1; //req.cookies.userId;
+  const userId = req.cookies.userId;
   const productId = req.body.productId;
   Order.findAll({ where: { customerId: userId, productId: productId } })
     .then((order) => {
@@ -189,8 +200,8 @@ module.exports.deleteProductFromCard = (req, res, _next) => {
       });
     });
 };
-module.exports.deleteCard = (_req, res, _next) => {
-  const userId = 1; //req.cookies.userId;
+module.exports.deleteCard = (req, res, _next) => {
+  const userId = req.cookies.userId;
   Order.findAll({ where: { customerId: userId } })
     .then((order) => {
       order.forEach((ordy) => {
