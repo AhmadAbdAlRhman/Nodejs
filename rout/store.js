@@ -60,6 +60,5 @@ router.post("/updateProduct",store.updateProduct);
 router.get("/getProfile", store.getProfile);
 // router.get("/store")
 //-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
-router.get("/ord" , cont.aprior);
-router.get("/example", cont.createIteams);
+router.get("/Aprior", cont.ApriorImplements);
 module.exports = router;

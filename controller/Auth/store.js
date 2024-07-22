@@ -45,7 +45,7 @@ module.exports.postCreateStore = (req, res, _next) => {
       });
     }
   });
-};
+};  
 
 module.exports.postAddProduct = async (req, res, _next) => {
   const SId = req.params.storeId;
@@ -83,7 +83,16 @@ module.exports.postAddProduct = async (req, res, _next) => {
 
 module.exports.getStore = (req, res, _next) => {
   const sid = req.params.id;
-  product.findAll({ where: { StoreId: sid } }).then((producty) => {
+   product.findAll({ where: { StoreId: sid } }).then(async (pro) => {
+    const producty = await Promise.all(
+      pro.map(async (product) => {
+        const images = await images.findAll({
+          where: { productId: product.id },
+          attributes: ["imageUrl"],
+        });
+        return { ...product.toJSON(), images };
+      })
+    );
     Store.findOne({ where: { id: sid } }).then((store) => {
       let storeName = store.StoreName;
       res.json({ pro: producty, storeName });
