@@ -1,24 +1,21 @@
 /*import the table*/
-const product = require("./product");
-const customer = require("./customer");
-const Store = require("./Store");
-const question = require("./rahaf");
-const test = require("./testRahaf");
-const order = require("./Order");
-const product_image = require("./Product_image");
+const sequelize = require('../config/database');
+require("./product");
+require("./customer");
+require("./Store");
+require("./Order");
+require("./Product_image");
+require("./bank");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-//link between the table
-Store.hasMany(product, { as: "products", foreignKey: "StoreId" });
-product.belongsTo(Store, { foreignKey: "StoreId" });
+(async () => {
+  try {
+    // await sequelize.authenticate();
+    console.log("Connection has been established successfully.");
 
-customer.hasMany(order, { as: "customer", foreignKey: "customerId" }); //one to many relationship from cart to user
-order.belongsTo(customer);
-
-product.hasMany(order, { as: "product", foreignKey: "productId" }); //one to many relationship from cart to user
-order.belongsTo(product);
-
-product.hasMany(product_image, { as: "image", foreignKey: "productId" }); //one to many relationship from cart to user
-product_image.belongsTo(product);
-
-test.hasMany(question, { as: "test", foreignKey: "testId" });
-question.belongsTo(test);
+    // Sync all models
+    // await sequelize.sync({ force: true }); // force: true will drop the table if it already exists
+    console.log("All models were synchronized successfully.");
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
+  }
+})();

@@ -30,11 +30,11 @@ module.exports.getAllProducts = async (_req, res, _next) => {
   }
 };
 module.exports.addToCard = (req, res, _next) => {
-  const userId = req.cookies.userId;
+  const userId = 5;//req.cookies.userId;
   const proId = req.body.productId;
   Order.findAll({
     where: { customerId: userId, productId: proId, paid: false },
-  })//
+  }) //
     .then((order) => {
       if (order.length === 0) {
         const OrderData = {
@@ -76,58 +76,109 @@ module.exports.addToCard = (req, res, _next) => {
 module.exports.changeQuantity = (req, res, _next) => {
   const orderId = req.body.orderId;
   const signal = req.body.signal;
-  Order.findAll({ where: { id: orderId } })
-    .then((order) => {
-      var ord = order[0];
-      if (signal === true) {
-        ord.quantity++;
-        ord.save();
-      } else {
-        if (ord.quantity === 1) {
-          ord.destroy();
-        } else {
-          ord.quantity--;
-          ord.save();
-        }
-      }
-    })
-    .then(() => {
-      res.status(200).json({ message: "Order updated successfully" });
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .json({ error: "Error updating order => 67", details: err });
-    });
+  let order = Order.findAll({ where: { id: orderId } });
+  var ord = order[0];
+  let prod = product.findAll({ where: { id: ord.productId } });
+  var pro = prod[0];
+  if (signal === true && pro.count > ord.quantity) {
+    ord.quantity++;
+    ord
+      .save()
+      .then(() => {
+        res.status(200).json("Success");
+      })
+      .catch((error) => {
+        res
+          .status(500)
+          .json({ error: "Error updating order => 88", details: error });
+      });
+  } else {
+    if (ord.quantity === 1) {
+      ord
+        .destroy()
+        .then(() => {
+          res.status(200).json("Success");
+        })
+        .catch((error) => {
+          res
+            .status(500)
+            .json({ error: "Error updating order => 88", details: error });
+        });
+    } else {
+      ord.quantity--;
+      ord
+        .save()
+        .then(() => {
+          res.status(200).json("Success");
+        })
+        .catch((error) => {
+          res
+            .status(500)
+            .json({ error: "Error updating order => 88", details: error });
+        });
+    }
+  }
 };
 module.exports.getSearch = async (req, res, _next) => {
   const nameProduct = req.params.nameProduct;
-  try {
-    const allProduct = await product.findAll({
-      where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
-        [Op.like]: `%${nameProduct.toLowerCase()}%`,
-      }),
-      include: [{ model: Store, attributes: ["StoreName"] }],
-    });
-    if (!allProduct || allProduct.length === 0) {
-      return res.send("No Products Found");
-    } else {
-      const productsWithImages = await Promise.all(
-        allProduct.map(async (product) => {
-          const images = await Image_product.findAll({
-            where: { productId: product.id },
-            attributes: ["imageUrl"],
-          });
-          return { ...product.toJSON(), images };
-        })
-      );
-      res.status(200).json(productsWithImages);
+  const sellerId = req.cookies.sellerId;
+  if (sellerId) {
+    try {
+      const allProduct = await product.findAll({
+        where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
+          [Op.like]: `%${nameProduct.toLowerCase()}%`,
+        }),
+        where: { StoreId: sellerId },
+        include: [{ model: Store, attributes: ["StoreName"] }],
+      });
+      if (!allProduct || allProduct.length === 0) {
+        return res.send("No Products Found");
+      } else {
+        const productsWithImages = await Promise.all(
+          allProduct.map(async (product) => {
+            const images = await Image_product.findAll({
+              where: { productId: product.id },
+              attributes: ["imageUrl"],
+            });
+            return { ...product.toJSON(), images };
+          })
+        );
+        res.status(200).json(productsWithImages);
+      }
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while fetching products" });
     }
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching products" });
+  } else {
+    try {
+      const allProduct = await product.findAll({
+        where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
+          [Op.like]: `%${nameProduct.toLowerCase()}%`,
+        }),
+        include: [{ model: Store, attributes: ["StoreName"] }],
+      });
+      if (!allProduct || allProduct.length === 0) {
+        return res.send("No Products Found");
+      } else {
+        const productsWithImages = await Promise.all(
+          allProduct.map(async (product) => {
+            const images = await Image_product.findAll({
+              where: { productId: product.id },
+              attributes: ["imageUrl"],
+            });
+            return { ...product.toJSON(), images };
+          })
+        );
+        res.status(200).json(productsWithImages);
+      }
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ error: "An error occurred while fetching products" });
+    }
   }
 };
 module.exports.postpaid = async (req, res, _next) => {

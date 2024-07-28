@@ -2,6 +2,7 @@ const Store = require("../../Models/Store");
 const product = require("../../Models/product");
 const cus = require("../../Models/customer");
 const images = require("../../Models/Product_image");
+const bank = require("../../Models/bank");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
@@ -11,42 +12,43 @@ const createToken = (id) => {
   });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.postCreateStore = (req, res, _next) => {
-  console.log(req.body);
-  const StoreName = req.body.StoreName;
-  const StoreKind = req.body.storeKind;
-  const SellerName = req.body.sellerName;
-  const SellerEmail = req.body.sellerEmail;
-  const SellerPassword = req.body.password;
-  const SellerPhone = req.body.sellerPhone;
-  Store.findOne({ where: { email: SellerEmail } }).then((store) => {
-    if (store) {
-      return res.status(400).json("This Store is already exists");
-    } else {
-      bcrypt.hash(SellerPassword, 10).then((hashedPassword) => {
-        const StoreData = {
-          StoreName: StoreName,
-          StoreKind: StoreKind,
-          SellerName: SellerName,
-          email: SellerEmail,
-          password: hashedPassword,
-          SellerPhone: SellerPhone,
-        };
-        Store
-          .create(StoreData)
-          .then((store) => {
-            const storeId = store.id;
-            const token = createToken(storeId);
-            res.json({ "result": store , token });
-          })
-          .catch((err) => {
-            res.status(400).json(err);
-          });
-      });
-    }
-  });
-};  
-
+module.exports.postCreateStore = async (req, res, _next) => {
+  let { StoreName, storeKind, sellerName, sellerEmail, password, sellerPhone } =
+    req.body;
+  let story = await Store.findOne({ where: { email: sellerEmail } });
+  if (story) return res.status(400).json("This Store is already exists");
+  story = await cus.findOne({ where: { email: sellerEmail } });
+  if (story) return res.status(400).json("This email is not valid");
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const StoreData = {
+    StoreName: StoreName,
+    StoreKind: storeKind,
+    SellerName: sellerName,
+    email: sellerEmail,
+    password: hashedPassword,
+    SellerPhone: sellerPhone,
+  };
+  await Store.create(StoreData)
+    .then(async (store) => {
+      const bankData = {
+        Semail: store.email,
+        balance: 1000000,
+        token: Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000,
+      };
+      await bank
+        .create(bankData)
+        .then((bankInfo) => {
+          const token = createToken(store.id);
+          res.cookie("token", token, { httpOnly: true });
+          res.cookie("storeId", store.id, { httpOnly: true });
+          res.status(200).json({ result: store, token, bankInfo });
+        });
+    }).catch((err)=>{
+      res.status(404).json(err);
+    });
+    
+};
+/*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.postAddProduct = async (req, res, _next) => {
   const SId = req.params.storeId;
   const productName = req.body.productName;
@@ -60,37 +62,39 @@ module.exports.postAddProduct = async (req, res, _next) => {
     photo_data: `${photo_data}`,
     StoreId: SId,
   };
-  try{
+  try {
     console.log(productsData);
-  await product.create(productsData).then(async (newPro)=>{
-    const optionImages = req.files["OptionImage"] || [];
-    const imagePromises = optionImages.map(file => {
-      const photoData = {
-        imageUrl: file.filename,
-        productId:newPro.id
-      };
-      images.create(photoData)
-    });
-    await Promise.all(imagePromises);
-  }).then(()=>{
-    res.status(200).json("The Product is added");
-  })
-}
-  catch(err){
+    await product
+      .create(productsData)
+      .then(async (newPro) => {
+        const optionImages = req.files["OptionImage"] || [];
+        const imagePromises = optionImages.map((file) => {
+          const photoData = {
+            imageUrl: file.filename,
+            productId: newPro.id,
+          };
+          images.create(photoData);
+        });
+        await Promise.all(imagePromises);
+      })
+      .then(() => {
+        res.status(200).json("The Product is added");
+      });
+  } catch (err) {
     res.status(405).json(`There is an err ${err} that mot allowed`);
-  };
+  }
 };
-
+/*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.getStore = (req, res, _next) => {
   const sid = req.params.id;
-   product.findAll({ where: { StoreId: sid } }).then(async (pro) => {
+  product.findAll({ where: { StoreId: sid } }).then(async (pro) => {
     const producty = await Promise.all(
       pro.map(async (product) => {
-        const images = await images.findAll({
+        const imageos = await images.findAll({
           where: { productId: product.id },
           attributes: ["imageUrl"],
         });
-        return { ...product.toJSON(), images };
+        return { ...product.toJSON(), imageos };
       })
     );
     Store.findOne({ where: { id: sid } }).then((store) => {
@@ -99,12 +103,10 @@ module.exports.getStore = (req, res, _next) => {
     });
   });
 };
-
+/*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.getStores = (_req, res, _next) => {
   // const sid = req.cookies.storeId;
   Store.findAll().then((store) => {
     res.json({ stores: store });
   });
 };
-
-

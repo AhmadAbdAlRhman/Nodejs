@@ -1,5 +1,5 @@
 const order = require("../Models/Order");
-const Sequelize = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 var transactions = [];
 generateCombinations = (items, k) => {
   if (k === 1) return items.map((item) => [item]);
@@ -114,80 +114,112 @@ module.exports.ApriorImplements = async (_req, res, _next) => {
   try {
     const items = [];
     const transactions = [];
-
     // Fetch distinct purchases
     const purchases = await order.findAll({
       attributes: [
         [Sequelize.fn("DISTINCT", Sequelize.col("purchase")), "purchase"],
       ],
+      where: { Paid: { [Op.not]: false } },
     });
-
     for (const item of purchases) {
       items.push(item.dataValues.purchase);
     }
-
-    // Fetch product IDs for each purchase
     const promises = items.map(async (i) => {
       const itom = [];
       const products = await order.findAll({
         attributes: ["productId"],
-        where: { purchase: i },
+        where: { purchase: i},
       });
       for (const it of products) {
         itom.push(it.dataValues.productId);
       }
       transactions.push(itom);
     });
-
     await Promise.all(promises);
-
-    const minSupport = 0.5;
-    const minConfidence = 0.8; // Set your desired minimum confidence level
-    let allFrequentItems = [];
-    let k = 1;
-    const supportCount = {};
-
-    // Generate frequent itemsets using Apriori algorithm
-    while (true) {
-      const itemSets = generateCombinations(Array.from(new Set(transactions.flat())), k);
-      if (itemSets.length === 0) break;
-
-      const currentSupportCount = countSupport(transactions, itemSets);
-      Object.assign(supportCount, currentSupportCount);
-      const frequentItems = filterItemSets(
-        currentSupportCount,
-        minSupport,
-        1
-        // transactions.length
-      );
-
-      if (Object.keys(frequentItems).length === 0) break;
-      allFrequentItems = allFrequentItems.concat(frequentItems);
-      k++;
-    }
-
-    // Generate association rules
-    const allRules = [];
-
-    Object.keys(supportCount).forEach((key) => {
-      const itemSet = key.split(",").map((item) => parseInt(item, 10));
-      if (itemSet.length > 1) {
-        const rules = calculateConfidence(transactions, itemSet, supportCount);
-        allRules.push(
-          ...rules.filter((rule) => rule.confidence >= minConfidence)
-        );
-      }
-    });
-
-    res.json({ 
-      frequentItemsets: allFrequentItems,
-      rules: allRules 
-    });
+    res.json(transactions);
   } catch (err) {
     console.error("Error:", err);
     res.status(500).send("Internal Server Error");
   }
 };
+// module.exports.ApriorImplements = async (_req, res, _next) => {
+//   try {
+//     const items = [];
+//     const transactions = [];
+
+//     // Fetch distinct purchases
+//     const purchases = await order.findAll({
+//       attributes: [
+//         [Sequelize.fn("DISTINCT", Sequelize.col("purchase")), "purchase"],
+//       ],
+//     });
+
+//     for (const item of purchases) {
+//       items.push(item.dataValues.purchase);
+//     }
+
+//     // Fetch product IDs for each purchase
+//     const promises = items.map(async (i) => {
+//       const itom = [];
+//       const products = await order.findAll({
+//         attributes: ["productId"],
+//         where: { purchase: i },
+//       });
+//       for (const it of products) {
+//         itom.push(it.dataValues.productId);
+//       }
+//       transactions.push(itom);
+//     });
+
+//     await Promise.all(promises);
+
+//     const minSupport = 0.5;
+//     const minConfidence = 0.8; // Set your desired minimum confidence level
+//     let allFrequentItems = [];
+//     let k = 1;
+//     const supportCount = {};
+
+//     // Generate frequent itemsets using Apriori algorithm
+//     while (true) {
+//       const itemSets = generateCombinations(Array.from(new Set(transactions.flat())), k);
+//       if (itemSets.length === 0) break;
+
+//       const currentSupportCount = countSupport(transactions, itemSets);
+//       Object.assign(supportCount, currentSupportCount);
+//       const frequentItems = filterItemSets(
+//         currentSupportCount,
+//         minSupport,
+//         1
+//         // transactions.length
+//       );
+
+//       if (Object.keys(frequentItems).length === 0) break;
+//       allFrequentItems = allFrequentItems.concat(frequentItems);
+//       k++;
+//     }
+
+//     // Generate association rules
+//     const allRules = [];
+
+//     Object.keys(supportCount).forEach((key) => {
+//       const itemSet = key.split(",").map((item) => parseInt(item, 10));
+//       if (itemSet.length > 1) {
+//         const rules = calculateConfidence(transactions, itemSet, supportCount);
+//         allRules.push(
+//           ...rules.filter((rule) => rule.confidence >= minConfidence)
+//         );
+//       }
+//     });
+
+//     res.json({
+//       frequentItemsets: allFrequentItems,
+//       rules: allRules
+//     });
+//   } catch (err) {
+//     console.error("Error:", err);
+//     res.status(500).send("Internal Server Error");
+//   }
+// };
 
 //   var items = [];
 //   order

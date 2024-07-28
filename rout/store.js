@@ -2,7 +2,8 @@ const express = require("express");
 const path = require("path");
 const AuthStore = require("../controller/Auth/store");
 const store = require("../controller/store");
-const cont = require("../controller/Aprior");
+const apri = require("../controller/apri");
+const aprior = require("../controller/Aprior");
 const router = express.Router();
 const FILE_TYPE_MAM = {
   "image/png": "png",
@@ -60,5 +61,6 @@ router.post("/updateProduct",store.updateProduct);
 router.get("/getProfile", store.getProfile);
 // router.get("/store")
 //-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
-router.get("/Aprior", cont.ApriorImplements);
+router.get("/Apri", apri.returnApri);
+router.get("/Aprior", aprior.ApriorImplements);
 module.exports = router;

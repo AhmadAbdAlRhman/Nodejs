@@ -1,5 +1,6 @@
 const Customer = require("../../Models/customer");
 const Seller = require("../../Models/Store");
+const bank = require("../../Models/bank");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
@@ -26,90 +27,69 @@ const createToken = (id) => {
     expiresIn: "1h",
   });
 };
-module.exports.postLogin = (req, res, _next) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  Seller.findOne({ where: { email: email } }).then(async (seller) => {
-    if (seller) {
-      const isValid = await bcrypt.compare(password, seller.password);
+module.exports.postLogin = async (req, res, _next) => {
+  const { email, password } = req.body;
+  let seller = Seller.findOne({ where: { email: email } });
+  if (seller) {
+    const isValid = await bcrypt.compare(password, seller.password);
+    if (isValid) {
+      const token = createToken(seller.id);
+      res.cookie("token", token, { httpOnly: true });
+      res.cookie("sellerId", seller.id, { httpOnly: true });
+      res.status(200).json({ seller, token });
+    } else {
+      res.status(404).json({ result: "Not Found" });
+    }
+  } else {
+    let customer = Customer.findOne({ where: { email: email } });
+    if (customer) {
+      const isValid = await bcrypt.compare(password, customer.password);
       if (isValid) {
-        const token = createToken(seller.id);
-        res.cookie("token", token, {
-          httpOnly: true,
-          // maxAge: "1h",
-        });
-        res.status(200).json({ seller, token });
+        const token = createToken(customer.id);
+        res.cookie("token", token, { httpOnly: true });
+        res.cookie("customerId", customer.id, { httpOnly: true });
+        res.status(200).json({ customer, token });
       } else {
         res.status(404).json({ result: "Not Found" });
       }
     } else {
-      Customer.findOne({ where: { email: email } }).then(async (customer) => {
-        if (customer) {
-          const isValid = await bcrypt.compare(password, customer.password);
-          if (isValid) {
-            const token = createToken(customer.id);
-            res.cookie("token", token, {
-              httpOnly: true,
-              // maxAge: "2h",
-            });
-            res.cookie("userId", customer.id, {
-              httpOnly: true,
-              // maxAge: "2h",
-            });
-            res.status(200).json({ customer, token });
-          } else {
-            res.status(404).json({ result: "Not Found" });
-          }
-        } else {
-          res.status(404).json({ result: "Not Found" });
-        }
-      });
+      res.status(404).json({ result: "Not Found" });
     }
-  });
+  }
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
-module.exports.postRegister = (req, res, _next) => {
-  const namy = req.body.firstName;
-  const Sname = "req.body.lastName";
-  const email = req.body.email;
-  const password = req.body.password;
-  Customer.findOne({ where: { email: email } }).then((user) => {
-    if (user) {
-      return res.json({ result: "This email is already exists" });
-    } else {
-      Seller.findOne({ where: { email: email } }).then((user) => {
-        if (user) {
-          return res.json({ result: "This email is already exists" });
-        } else {
-          bcrypt.hash(password, 10).then(async (hashedPassword) => {
-            const userData = {
-              first_name: namy,
-              second_name: Sname,
-              email: email,
-              password: hashedPassword,
-            };
-            await Customer.create(userData)
-              .then((user) => {
-                const token = createToken(user.id);
-                res.cookie("token", token, {
-                  httpOnly: true,
-                  // maxAge: '2h',
-                });
-                res.cookie("userId", user.id, {
-                  httpOnly: true,
-                  // maxAge: '2h',
-                });
-                res.status(200).json({ user, token });
-              })
-              .catch((err) => {
-                console.log(err);
-                res.status(400).json({ result: "failed to Register " });
-              });
-          });
-        }
-      });
-    }
-  });
+module.exports.postRegister = async (req, res, _next) => {
+  const { firstName, lastName, email, password, address, phoneNumber } =
+    req.body;
+  try {
+    let user = await Customer.findOne({ where: { email: email } });
+    if (user) return res.json({ result: "This email is already exists" });
+    user = await Seller.findOne({ where: { email: email } });
+    if (user) return res.json({ result: "This email is already exists" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userData = {
+      first_name: firstName,
+      second_name: lastName,
+      email: email,
+      password: hashedPassword,
+      address: address,
+      telephone: phoneNumber,
+    };
+    const newCustomer = await Customer.create(userData);
+    const bankData = {
+      Cemail: newCustomer.email,
+      balance: 1000000,
+      token: Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000,
+    };
+    await bank.create(bankData);
+    const token = createToken(newCustomer.id);
+    res.cookie("token", token, { httpOnly: true });
+    res.cookie("userId", newCustomer.id, { httpOnly: true });
+    res.status(200).json({ newCustomer, token, bankData });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ result: "failed to Register " });
+  }
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.postUpdateProfile = (req, res, _next) => {
@@ -148,7 +128,7 @@ module.exports.getLogout = (_req, res, _next) => {
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.postPhotoProfile = (req, res, _next) => {
-  const userId = 6;//req.cookies.userId;
+  const userId = 6; //req.cookies.userId;
   const photo = req.file.filename;
   Customer.findOne({ where: { id: userId } }).then((user) => {
     user
@@ -162,3 +142,33 @@ module.exports.postPhotoProfile = (req, res, _next) => {
   });
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
+module.exports.deleteCount = async (req, res, _next) => {
+  const customerId = req.cookies.customerId;
+  const sellerId = 1; //req.cookies.sellerId;
+  if (customerId) {
+    await Customer.findAll({ where: { id: customerId } })
+      .then((customer) => {
+        let cus = customer[0];
+        cus.destroy();
+      })
+      .then(() => {
+        res.status(200).json("success");
+      })
+      .catch((error) => {
+        res.status(404).json(error);
+      });
+  }
+  if (sellerId) {
+    await Seller.findAll({ where: { id: sellerId } })
+      .then((seller) => {
+        let sel = seller[0];
+        sel.destroy();
+      })
+      .then(() => {
+        res.status(200).json("success");
+      })
+      .catch((error) => {
+        res.status(404).json(error);
+      });
+  }
+};
