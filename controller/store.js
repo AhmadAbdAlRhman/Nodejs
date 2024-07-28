@@ -30,7 +30,7 @@ module.exports.getAllProducts = async (_req, res, _next) => {
   }
 };
 module.exports.addToCard = (req, res, _next) => {
-  const userId = 5;//req.cookies.userId;
+  const userId = 5; //req.cookies.userId;
   const proId = req.body.productId;
   Order.findAll({
     where: { customerId: userId, productId: proId, paid: false },
@@ -55,17 +55,20 @@ module.exports.addToCard = (req, res, _next) => {
           });
       } else {
         const ord = order[0];
-        ord.quantity++;
-        ord
-          .save()
-          .then(() => {
-            res.status(200).json({ message: "Order updated successfully" });
-          })
-          .catch((err) => {
-            res
-              .status(500)
-              .json({ error: "Error updating order", details: err });
-          });
+        let prod = product.findAll({ where: { id: ord.productId } });
+        if (prod.count > ord.quantity) {
+          ord.quantity++;
+          ord
+            .save()
+            .then(() => {
+              res.status(200).json({ message: "Order updated successfully" });
+            })
+            .catch((err) => {
+              res
+                .status(500)
+                .json({ error: "Error updating order", details: err });
+            });
+        }
       }
     })
     .catch((err) => {
