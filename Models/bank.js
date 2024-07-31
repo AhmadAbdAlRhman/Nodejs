@@ -47,23 +47,23 @@ const Bank = sequelize.define(
 );
 store.hasOne(
   Bank,
-  { foreignKey: "email" },
+  { foreignKey: "Semail" },
   {
     onDelete: "RESTRICT",
     onUpdate: "RESTRICT",
   }
 );
-Bank.belongsTo(store, { foreignKey: "email" });
+Bank.belongsTo(store, { foreignKey: "Semail" });
 
 Customer.hasOne(
   Bank,
-  { foreignKey: "email" },
+  { foreignKey: "Cemail" },
   {
     onDelete: "RESTRICT",
     onUpdate: "RESTRICT",
   }
 );
-Bank.belongsTo(Customer, { foreignKey: "email" });
+Bank.belongsTo(Customer, { foreignKey: "Cemail" });
 
 
 module.exports = Bank;

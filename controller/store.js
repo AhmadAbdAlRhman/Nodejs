@@ -2,6 +2,7 @@ const product = require("../Models/product");
 const { Sequelize, Op } = require("sequelize");
 const Store = require("../Models/Store");
 const Order = require("../Models/Order");
+const bank = require("../Models/bank");
 const Customer = require("../Models/customer");
 const Image_product = require("../Models/Product_image");
 module.exports.getAllProducts = async (_req, res, _next) => {
@@ -189,27 +190,39 @@ module.exports.getSearch = async (req, res, _next) => {
   }
 };
 module.exports.postpaid = async (req, res, _next) => {
-  const userId = req.body.userId;
-  var maxPurchase = await Order.max("purchase");
-  var x = ++maxPurchase;
-  Order.findAll({
-    where: { [Op.and]: [{ customerId: userId }, { Paid: false }] },
-  })
-    .then((order) => {
-      order.forEach((ord) => {
+  const userId = 5;//req.cookies.userId;
+  const { orderId, totalBill, privateNumber } = req.body;
+  let User = await bank.findAll({ where: { token: privateNumber } });
+  let user = User[0];
+  if (user.balance < totalBill) {
+    res.status(404).json("There is not enough money");
+  } else {
+    user.balance -= totalBill;
+    await user.save().then(async (result) => {
+      var maxPurchase = await Order.max("purchase");
+      var x = ++maxPurchase;
+      let ordery = await Order.findAll({
+        where: { [Op.and]: [{ customerId: userId }, { Paid: false }] },
+      });
+      ordery.forEach(async (ord) => {
         ord.Paid = true;
         ord.purchase = x;
-        ord.save();
+        await ord.save().then(async (result) => {
+          let produ = await product.findAll({ where: { id: ord.productId } });
+          let pro = produ[0];
+          pro.count -= ord.quantity;
+          pro
+            .save()
+            .then((result) => {
+              res.status(200).json("Success");
+            })
+            // .catch((err) => {
+            //   res.status(404).json("Failed");
+            // });
+        });
       });
-      // require("./controller/schedule");
-    })
-    .then(() => {
-      res.status(200).json({ message: "Order Paid Successfully" });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ error: "Error in payment => 82", details: err });
     });
+  }
 };
 module.exports.postRate = (req, res, _next) => {
   const rate = req.body.rate;
