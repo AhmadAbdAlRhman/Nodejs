@@ -29,7 +29,7 @@ const createToken = (id) => {
 };
 module.exports.postLogin = async (req, res, _next) => {
   const { email, password } = req.body;
-  let seller = Seller.findOne({ where: { email: email } });
+  let seller = await  Seller.findOne({ where: { email: email } });
   if (seller) {
     const isValid = await bcrypt.compare(password, seller.password);
     if (isValid) {
@@ -41,7 +41,7 @@ module.exports.postLogin = async (req, res, _next) => {
       res.status(404).json({ result: "Not Found" });
     }
   } else {
-    let customer = Customer.findOne({ where: { email: email } });
+    let customer = await Customer.findOne({ where: { email: email } });
     if (customer) {
       const isValid = await bcrypt.compare(password, customer.password);
       if (isValid) {

@@ -29,72 +29,76 @@ module.exports.getAllProducts = async (_req, res, _next) => {
       .json({ error: "An error occurred while fetching products" });
   }
 };
-module.exports.addToCard = (req, res, _next) => {
+module.exports.addToCard = async (req, res, _next) => {
   const userId = 5; //req.cookies.userId;
   const proId = req.body.productId;
-  Order.findAll({
-    where: { customerId: userId, productId: proId, paid: false },
-  }) //
-    .then((order) => {
-      if (order.length === 0) {
-        const OrderData = {
-          customerId: userId,
-          date: Date.now(),
-          productId: proId,
-          quantity: 1,
-          paid: false,
-        };
-        Order.create(OrderData)
+  try {
+    let order = await Order.findAll({
+      where: { customerId: userId, productId: proId, paid: false },
+    }); //
+    if (order.length === 0) {
+      const OrderData = {
+        customerId: userId,
+        date: Date.now(),
+        productId: proId,
+        quantity: 1,
+        paid: false,
+      };
+      await Order.create(OrderData)
+        .then(() => {
+          res.status(201).json({ message: "Order created successfully" });
+        })
+        .catch((err) => {
+          res.status(500).json({ error: "Error creating order", details: err });
+        });
+    } else {
+      const ord = order[0];
+      let prod = await product.findAll({ where: { id: ord.productId } });
+      let pro = prod[0];
+      if (pro.count > ord.quantity) {
+        ord.quantity++;
+        ord
+          .save()
           .then(() => {
-            res.status(201).json({ message: "Order created successfully" });
+            res.status(200).json({ message: "Order updated successfully" });
           })
           .catch((err) => {
             res
               .status(500)
-              .json({ error: "Error creating order", details: err });
+              .json({ error: "Error updating order", details: err });
           });
       } else {
-        const ord = order[0];
-        let prod = product.findAll({ where: { id: ord.productId } });
-        if (prod.count > ord.quantity) {
-          ord.quantity++;
-          ord
-            .save()
-            .then(() => {
-              res.status(200).json({ message: "Order updated successfully" });
-            })
-            .catch((err) => {
-              res
-                .status(500)
-                .json({ error: "Error updating order", details: err });
-            });
-        }
+        res.status(200).json({ error: "The count of product is not enough" });
       }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ error: "Error fetching orders", details: err });
-    });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error fetching orders", details: err });
+  }
 };
-module.exports.changeQuantity = (req, res, _next) => {
+module.exports.changeQuantity = async (req, res, _next) => {
   const orderId = req.body.orderId;
   const signal = req.body.signal;
-  let order = Order.findAll({ where: { id: orderId } });
+  let order = await Order.findAll({ where: { id: orderId } });
   var ord = order[0];
-  let prod = product.findAll({ where: { id: ord.productId } });
+  let prod = await product.findAll({ where: { id: ord.productId } });
   var pro = prod[0];
-  if (signal === true && pro.count > ord.quantity) {
-    ord.quantity++;
-    ord
-      .save()
-      .then(() => {
-        res.status(200).json("Success");
-      })
-      .catch((error) => {
-        res
-          .status(500)
-          .json({ error: "Error updating order => 88", details: error });
-      });
+  if (signal === true) {
+    if (pro.count > ord.quantity) {
+      ord.quantity++;
+      ord
+        .save()
+        .then(() => {
+          res.status(200).json("Success");
+        })
+        .catch((error) => {
+          res
+            .status(500)
+            .json({ error: "Error updating order => 88", details: error });
+        });
+    } else {
+      res.status(200).json({ error: "The count of product is not enough" });
+    }
   } else {
     if (ord.quantity === 1) {
       ord
