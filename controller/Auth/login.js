@@ -29,14 +29,17 @@ const createToken = (id) => {
 };
 module.exports.postLogin = async (req, res, _next) => {
   const { email, password } = req.body;
-  let seller = await  Seller.findOne({ where: { email: email } });
+  let seller = await Seller.findOne({ where: { email: email } });
   if (seller) {
     const isValid = await bcrypt.compare(password, seller.password);
     if (isValid) {
-      const token = createToken(seller.id);
-      res.cookie("token", token, { httpOnly: true });
-      res.cookie("sellerId", seller.id, { httpOnly: true });
-      res.status(200).json({ seller, token });
+      bank.findOne({ where: { Semail: store.email } }).then((privateNumb) => {
+        let privateNumber = privateNumb.token;
+        const token = createToken(seller.id);
+        res.cookie("token", token, { httpOnly: true });
+        res.cookie("sellerId", seller.id, { httpOnly: true });
+        res.status(200).json({ seller, token, privateNumber });
+      });
     } else {
       res.status(404).json({ result: "Not Found" });
     }
@@ -45,10 +48,15 @@ module.exports.postLogin = async (req, res, _next) => {
     if (customer) {
       const isValid = await bcrypt.compare(password, customer.password);
       if (isValid) {
-        const token = createToken(customer.id);
-        res.cookie("token", token, { httpOnly: true });
-        res.cookie("customerId", customer.id, { httpOnly: true });
-        res.status(200).json({ customer, token });
+        bank
+          .findOne({ where: { Cemail: customer.email } })
+          .then((privateNumb) => {
+            let privateNumber = privateNumb.token;
+            const token = createToken(customer.id);
+            res.cookie("token", token, { httpOnly: true });
+            res.cookie("customerId", customer.id, { httpOnly: true });
+            res.status(200).json({ customer, token, privateNumber });
+          });
       } else {
         res.status(404).json({ result: "Not Found" });
       }

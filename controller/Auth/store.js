@@ -35,18 +35,16 @@ module.exports.postCreateStore = async (req, res, _next) => {
         balance: 1000000,
         token: Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000,
       };
-      await bank
-        .create(bankData)
-        .then((bankInfo) => {
-          const token = createToken(store.id);
-          res.cookie("token", token, { httpOnly: true });
-          res.cookie("storeId", store.id, { httpOnly: true });
-          res.status(200).json({ result: store, token, bankInfo });
-        });
-    }).catch((err)=>{
+      await bank.create(bankData).then((bankInfo) => {
+        const token = createToken(store.id);
+        res.cookie("token", token, { httpOnly: true });
+        res.cookie("storeId", store.id, { httpOnly: true });
+        res.status(200).json({ result: store, token, bankInfo });
+      });
+    })
+    .catch((err) => {
       res.status(404).json(err);
     });
-    
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.postAddProduct = async (req, res, _next) => {
@@ -94,7 +92,7 @@ module.exports.getStore = (req, res, _next) => {
           where: { productId: product.id },
           attributes: ["imageUrl"],
         });
-        return { ...product.toJSON(), images : imageos };
+        return { ...product.toJSON(), images: imageos };
       })
     );
     Store.findOne({ where: { id: sid } }).then((store) => {
