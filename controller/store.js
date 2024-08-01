@@ -5,6 +5,19 @@ const Order = require("../Models/Order");
 const bank = require("../Models/bank");
 const Customer = require("../Models/customer");
 const Image_product = require("../Models/Product_image");
+StoreBalance = async (proId, quantity) => {
+  // return new Promise((resolve, reject) => {
+  let pro = await product.findOne({ where: { id: proId } });
+  let proCount = pro.price;
+  let strId = pro.StoreId;
+  let TotalPrice = proCount * quantity;
+  let store = await Store.findOne({ where: { id: strId } });
+  let storeEmail = store.email;
+  // let storeBalance = await StoreBalance.findAndCountAll({where : {storeEmail : store
+  let account = await bank.findOne({ where: { Semail: storeEmail } });
+  account.balance += TotalPrice;
+  await account.save();
+};
 module.exports.getAllProducts = async (_req, res, _next) => {
   try {
     const products = await product.findAll({
@@ -190,38 +203,38 @@ module.exports.getSearch = async (req, res, _next) => {
   }
 };
 module.exports.postpaid = async (req, res, _next) => {
-  const userId = 5;//req.cookies.userId;
-  const { orderId, totalBill, privateNumber } = req.body;
+  const userId = 5; //req.cookies.userId;
+  const { totalBill, privateNumber } = req.body;
   let User = await bank.findAll({ where: { token: privateNumber } });
   let user = User[0];
   if (user.balance < totalBill) {
     res.status(404).json("There is not enough money");
   } else {
     user.balance -= totalBill;
-    await user.save().then(async (result) => {
-      var maxPurchase = await Order.max("purchase");
-      var x = ++maxPurchase;
-      let ordery = await Order.findAll({
-        where: { [Op.and]: [{ customerId: userId }, { Paid: false }] },
-      });
-      ordery.forEach(async (ord) => {
-        ord.Paid = true;
-        ord.purchase = x;
-        await ord.save().then(async (result) => {
-          let produ = await product.findAll({ where: { id: ord.productId } });
-          let pro = produ[0];
-          pro.count -= ord.quantity;
-          pro
-            .save()
-            .then((result) => {
-              res.status(200).json("Success");
-            })
-            // .catch((err) => {
-            //   res.status(404).json("Failed");
-            // });
+    await user
+      .save()
+      .then(async () => {
+        var maxPurchase = await Order.max("purchase");
+        var x = ++maxPurchase;
+        let ordery = await Order.findAll({
+          where: { [Op.and]: [{ customerId: userId }, { Paid: false }] },
         });
+        ordery.forEach(async (ord) => {
+          ord.Paid = true;
+          ord.purchase = x;
+          StoreBalance(ord.productId, ord.quantity);
+          await ord.save().then(async () => {
+            let produ = await product.findAll({ where: { id: ord.productId } });
+            let pro = produ[0];
+            pro.count -= ord.quantity;
+            pro.save();
+          });
+        });
+        res.status(200).json({ message: "Payment successful" });
+      })
+      .catch((err) => {
+        res.status(404).json("Failed");
       });
-    });
   }
 };
 module.exports.postRate = (req, res, _next) => {

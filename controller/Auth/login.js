@@ -98,7 +98,6 @@ module.exports.postUpdateProfile = (req, res, _next) => {
   const second_name = req.body.lastName;
   const phoneNumber = req.body.phoneNumber;
   const addressy = req.body.address;
-  const photo = req.file.filename;
   Customer.findOne({ where: { id: userId } })
     .then((cust) => {
       const userData = {
@@ -106,7 +105,6 @@ module.exports.postUpdateProfile = (req, res, _next) => {
         second_name: second_name,
         telephone: phoneNumber,
         address: addressy,
-        photo: photo,
       };
       cust
         .update(userData)

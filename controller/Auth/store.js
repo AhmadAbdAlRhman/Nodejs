@@ -94,7 +94,7 @@ module.exports.getStore = (req, res, _next) => {
           where: { productId: product.id },
           attributes: ["imageUrl"],
         });
-        return { ...product.toJSON(), imageos };
+        return { ...product.toJSON(), images : imageos };
       })
     );
     Store.findOne({ where: { id: sid } }).then((store) => {
