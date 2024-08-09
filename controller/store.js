@@ -3,8 +3,38 @@ const { Sequelize, Op } = require("sequelize");
 const Store = require("../Models/Store");
 const Order = require("../Models/Order");
 const bank = require("../Models/bank");
+const Notification = require("../Models/Notifications");
 const Customer = require("../Models/customer");
 const Image_product = require("../Models/Product_image");
+setNote = async (OrderId) => {
+  let order = await Order.findOne({ where: { id: OrderId } });
+  let productId = order.productId;
+  let CustomerId = order.customerId;
+  let customer = await Customer.findOne({where:{id:CustomerId}});
+  let produ =  await product.findOne({ where: { id: productId } });
+  let StoreId = produ.StoreId;
+  let producty = produ.name;
+  const NoteData = {
+    StoreId: StoreId,
+    OrderId: OrderId,
+    customer_first: customer.first_name,
+    customer_second: customer.second_name,
+    product:producty,
+  };
+  Notification.create(NoteData);
+  let products = await product.findAll();
+  products.forEach(async (product) => {
+    if (product.count < 5){
+      let store = await Store.findOne({where : {id : product.StoreId}});
+      const NoteData2 = {
+        StoreId : store.id,
+        ProductId : product.id,
+        count : product.count
+      }
+      Notification.create(NoteData2);
+    };
+  });
+};
 StoreBalance = async (proId, quantity) => {
   // return new Promise((resolve, reject) => {
   let pro = await product.findOne({ where: { id: proId } });
@@ -44,13 +74,14 @@ module.exports.getAllProducts = async (_req, res, _next) => {
   }
 };
 module.exports.addToCard = async (req, res, _next) => {
-  const userId = 5; //req.cookies.userId;
+  const userId = 1; //req.cookies.userId;
   const proId = req.body.productId;
   try {
+    let producty = await product.findOne({where: {id:proId}});
     let order = await Order.findAll({
       where: { customerId: userId, productId: proId, paid: false },
     }); //
-    if (order.length === 0) {
+    if (order.length === 0 && producty.count > 0) {
       const OrderData = {
         customerId: userId,
         date: Date.now(),
@@ -142,14 +173,15 @@ module.exports.changeQuantity = async (req, res, _next) => {
 };
 module.exports.getSearch = async (req, res, _next) => {
   const nameProduct = req.params.nameProduct;
-  const sellerId = req.cookies.sellerId;
+  const sellerId = 1;//req.cookies.sellerId;
   if (sellerId) {
     try {
       const allProduct = await product.findAll({
         where: Sequelize.where(Sequelize.fn("LOWER", Sequelize.col("name")), {
           [Op.like]: `%${nameProduct.toLowerCase()}%`,
+          StoreId: sellerId,
         }),
-        where: { StoreId: sellerId },
+        // where: {},
         include: [{ model: Store, attributes: ["StoreName"] }],
       });
       if (!allProduct || allProduct.length === 0) {
@@ -203,7 +235,7 @@ module.exports.getSearch = async (req, res, _next) => {
   }
 };
 module.exports.postpaid = async (req, res, _next) => {
-  const userId = 5; //req.cookies.userId;
+  const userId = 1; //req.cookies.userId;
   const { totalBill, privateNumber } = req.body;
   let User = await bank.findAll({ where: { token: privateNumber } });
   let user = User[0];
@@ -222,13 +254,14 @@ module.exports.postpaid = async (req, res, _next) => {
         ordery.forEach(async (ord) => {
           ord.Paid = true;
           ord.purchase = x;
-          StoreBalance(ord.productId, ord.quantity);
           await ord.save().then(async () => {
             let produ = await product.findAll({ where: { id: ord.productId } });
             let pro = produ[0];
             pro.count -= ord.quantity;
             pro.save();
           });
+          StoreBalance(ord.productId, ord.quantity);
+          setNote(ord.id);
         });
         res.status(200).json({ message: "Payment successful" });
       })
@@ -257,7 +290,7 @@ module.exports.postRate = (req, res, _next) => {
 module.exports.getCard = (req, res, _next) => {
   const userId = req.cookies.userId;
   Order.findAll({
-    where: { customerId: userId },
+    where: { customerId: userId , paid : false },
     include: [{ model: product, attributes: ["name", "price"] }],
   })
     .then((order) => {
@@ -270,7 +303,7 @@ module.exports.getCard = (req, res, _next) => {
 module.exports.deleteProductFromCard = (req, res, _next) => {
   const userId = req.cookies.userId;
   const productId = req.body.productId;
-  Order.findAll({ where: { customerId: userId, productId: productId } })
+  Order.findAll({ where: { customerId: userId, productId: productId , paid: false} })
     .then((order) => {
       const ordy = order[0];
       ordy.destroy();
@@ -320,8 +353,6 @@ module.exports.updateProduct = (req, res, _next) => {
   const Size = req.body.Size ? req.body.Size : null;
   const Color = req.body.Color ? req.body.Color : null;
   const Kind = req.body.Kind ? req.body.Kind : null;
-  const DisCount = req.body.DisCount ? req.body.DisCount : null;
-  const Description = req.body.Description ? req.body.Description : null;
   const proData = {
     name: Name,
     count: Count,
@@ -329,8 +360,6 @@ module.exports.updateProduct = (req, res, _next) => {
     size: Size,
     color: Color,
     kind: Kind,
-    disCount: DisCount,
-    description: Description,
   };
   product
     .update(proData, { where: { id: productId } })
@@ -351,3 +380,21 @@ module.exports.getProfile = (req, res, _next) => {
       res.json(`There is an err${err}`);
     });
 };
+module.exports.getNote = async (req, res, _next) =>{
+  const sellerId = 1;//req.cookies.sellerId;
+  try{
+    let Noti = await Notification.findAll({where:{StoreId: sellerId}});
+    res.status(200).json(Noti);
+  }catch(err){
+    res.status(404).json(err);
+  }
+}
+module.exports.getHistory = async (req, res, _next) =>{
+  const userId = 1; //req.cookies.userId; 
+  try{
+    let History = await Order.findAll({where:{customerId: userId , paid : true}});
+    res.status(200).json(History);
+  }catch(err){
+    res.status(404).json(err);
+  }
+}

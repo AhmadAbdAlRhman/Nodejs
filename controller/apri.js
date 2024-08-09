@@ -13,25 +13,19 @@ const generateTransction = async () =>{
       ],
       where: { Paid: { [Op.not]: false } },
     });
-    for (const item of purchases) {
-      items.push(item.dataValues.purchase);
-    }
+    for (const item of purchases) {items.push(item.dataValues.purchase);}
     const promises = items.map(async (i) => {
       const itom = [];
       const products = await order.findAll({
         attributes: ["productId"],
-        where: { purchase: i},
+        where: { prchase: i},
       });
-      for (const it of products) {
-        itom.push(it.dataValues.productId);
-      }
+      for (const it of products) {itom.push(it.dataValues.productId);}
       transactions.push(itom);
     });
     await Promise.all(promises);
     return transactions;
-}catch(error) {
-    console.log(error);
-}
+}catch(error) {console.log(error);}
 } 
 const generateCombinations = (items, k) => {
   if (k === 1) return items.map((item) => [item]);
@@ -73,7 +67,7 @@ const filterItemSets = (supportCount, minSupport, totalTransactions) => {
   return frequentItems;
 };
 
-const generateAssociationRules = (frequentItems, transactions) => {
+const generateAssociationRules = (frequentItems) => {
   const rules = [];
   Object.keys(frequentItems).map((itemset) => {
     const items = itemset.split(",").map(Number);
@@ -140,7 +134,7 @@ module.exports.returnApri = async (req, res, _next) => {
         const bestRules = await apriori(minSupport);
         const resu = [];
         bestRules.forEach((item) => {
-        if (item.lhs.includes(proId) && item.rhs.length == 3 ) {
+        if (item.lhs == proId && item.rhs.length >= 1 && item.rhs.length <= 3) {
           item.rhs.map((u) => {
             resu.push(u);
           });
@@ -149,7 +143,7 @@ module.exports.returnApri = async (req, res, _next) => {
         const uniqueresu = [...new Set(resu)];
         const productwithAprior = await Promise.all(
           uniqueresu.map(async (w) => {
-            let products = await product.findAll({ where: { id: w } });
+            let products = await product.findOne({ where: { id: w } });
             return products;
           })
         );

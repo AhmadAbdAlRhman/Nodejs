@@ -52,34 +52,53 @@ module.exports.postAddProduct = async (req, res, _next) => {
   const productName = req.body.productName;
   const productCount = req.body.productCount;
   const productPrice = req.body.productPrice;
+  const Size = req.body.Size ? req.body.Size : null;
+  const Color = req.body.Color ? req.body.Color : null;
+  const Kind = req.body.Kind ? req.body.Kind : null;
   const photo_data = req.files["image"][0].filename;
+  const privateNumber = req.body.privateNumber;
+  let store = await bank.findOne({ where: { token: privateNumber } });
   const productsData = {
     name: productName,
     count: productCount,
     price: productPrice,
     photo_data: `${photo_data}`,
     StoreId: SId,
+    size: Size,
+    color: Color,
+    kind: Kind,
   };
-  try {
-    console.log(productsData);
-    await product
-      .create(productsData)
-      .then(async (newPro) => {
-        const optionImages = req.files["OptionImage"] || [];
-        const imagePromises = optionImages.map((file) => {
-          const photoData = {
-            imageUrl: file.filename,
-            productId: newPro.id,
-          };
-          images.create(photoData);
+  if (store) {
+    console.log("Ahmad");
+    try {
+      await product
+        .create(productsData)
+        .then(async (newPro) => {
+          const optionImages = req.files["OptionImage"] || [];
+          const imagePromises = optionImages.map((file) => {
+            const photoData = {
+              imageUrl: file.filename,
+              productId: newPro.id,
+            };
+            images.create(photoData);
+          });
+          await Promise.all(imagePromises);
+        })
+        .then(async () => {
+          if (productCount <= 50) {
+            await store.update((store.balance -= (10 * store.balance) / 100));
+          } else if (productCount <= 100 && productCount > 50) {
+            await store.update((store.balance -= (20 * store.balance) / 100));
+          } else {
+            await store.save((store.balance -= (30 * store.balance) / 100));
+          }
+          res.status(200).json("The Product is added");
         });
-        await Promise.all(imagePromises);
-      })
-      .then(() => {
-        res.status(200).json("The Product is added");
-      });
-  } catch (err) {
-    res.status(405).json(`There is an err ${err} that mot allowed`);
+    } catch (err) {
+      res.status(405).json(`There is an err ${err} that mot allowed`);
+    }
+  } else {
+    res.status(404).json("The privateNumber is not found");
   }
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
@@ -107,4 +126,20 @@ module.exports.getStores = (_req, res, _next) => {
   Store.findAll().then((store) => {
     res.json({ stores: store });
   });
+};
+/*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
+module.exports.UpdateStoreInfo = async (req, res, _next) => {
+  const storeId = req.cookies.sellerId;
+  const { StoreName, SellerPhone } = req.body;
+  const DataUpdate = {
+    StoreName,
+    SellerPhone,
+  };
+  await Store.update(DataUpdate, { where: { id: storeId } })
+    .then(() => {
+      res.status(200).json({ Success });
+    })
+    .catch((err) => {
+      res.status(401).json(err);
+    });
 };

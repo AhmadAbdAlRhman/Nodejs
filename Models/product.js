@@ -24,7 +24,7 @@ const Product = sequelize.define(
       allowNull: false,
     },
     photo_data: {
-      type: Sequelize.BLOB("long"),
+      type: Sequelize.STRING,
       allowNull: true,
     },
     StoreId: {

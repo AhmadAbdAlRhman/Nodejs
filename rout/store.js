@@ -3,7 +3,6 @@ const path = require("path");
 const AuthStore = require("../controller/Auth/store");
 const store = require("../controller/store");
 const apri = require("../controller/apri");
-const aprior = require("../controller/Aprior");
 const router = express.Router();
 const FILE_TYPE_MAM = {
   "image/png": "png",
@@ -46,6 +45,8 @@ router.post(
 router.get("/stores", AuthStore.getStores);
 router.get("/store/:id", AuthStore.getStore);
 
+router.post("/UpdateStoreInfo", AuthStore.UpdateStoreInfo);
+
 router.post("/order", store.addToCard);
 router.post("/changeQuantity", store.changeQuantity);
 router.get("/searchProduct/:nameProduct", store.getSearch);
@@ -59,8 +60,8 @@ router.post("/deleteCard" , store.deleteCard);
 router.post("/deleteProductFromStore", store.deleteProductFromStore);
 router.post("/updateProduct",store.updateProduct);
 router.get("/getProfile", store.getProfile);
-// router.get("/store")
+router.get("/Noti",store.getNote);
+router.get('/history', store.getHistory);
 //-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 router.get("/Apri", apri.returnApri);
-router.get("/Aprior", aprior.ApriorImplements);
 module.exports = router;

@@ -50,4 +50,5 @@ router.post("/changePassword/:token" , password.reSetPassword);
 router.post("/profilePhoto",control.postPhotoProfile);
 //delete Account
 router.post("/deleteAccount", control.deleteCount);
+
 module.exports = router;
