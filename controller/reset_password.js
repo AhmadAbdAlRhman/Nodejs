@@ -29,7 +29,7 @@ module.exports.sendToken = (req, res, next) => {
         form: "ahmadhajnajeeb45@gmail.com",
         to: email,
         subject: "password reset",
-        html: `click <a href="http://localhost:3000/${token}">here</a> to confirm your identity to reset your password`,
+        html: `click <a href="http://localhost:3000/resetPassword/${token}">here</a> to confirm your identity to reset your password`,
       };
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) {

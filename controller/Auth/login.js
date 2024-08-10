@@ -134,7 +134,7 @@ module.exports.getLogout = (_req, res, _next) => {
 };
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.postPhotoProfile = (req, res, _next) => {
-  const userId = 6; //req.cookies.userId;
+  const userId = req.cookies.userId;
   const photo = req.file.filename;
   Customer.findOne({ where: { id: userId } }).then((user) => {
     user
@@ -150,7 +150,7 @@ module.exports.postPhotoProfile = (req, res, _next) => {
 /*_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_*/
 module.exports.deleteCount = async (req, res, _next) => {
   const customerId = req.cookies.customerId;
-  const sellerId = 1; //req.cookies.sellerId;
+  const sellerId = req.cookies.sellerId;
   if (customerId) {
     await Customer.findAll({ where: { id: customerId } })
       .then((customer) => {

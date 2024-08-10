@@ -3,6 +3,7 @@ const { Sequelize, Op } = require("sequelize");
 const Store = require("../Models/Store");
 const Order = require("../Models/Order");
 const bank = require("../Models/bank");
+const schedule = require("./schedule");
 const Notification = require("../Models/Notifications");
 const Customer = require("../Models/customer");
 const Image_product = require("../Models/Product_image");
@@ -19,8 +20,8 @@ setNote = async (OrderId) => {
     OrderId: OrderId,
     customer_first: customer.first_name,
     customer_second: customer.second_name,
-    address: customer.address,
-    phone: customer.telephone,
+    // address: customer.address,
+    // phone: customer.telephone,
     product:producty,
   };
   Notification.create(NoteData);
@@ -76,7 +77,7 @@ module.exports.getAllProducts = async (_req, res, _next) => {
   }
 };
 module.exports.addToCard = async (req, res, _next) => {
-  const userId = 1; //req.cookies.userId;
+  const userId = req.cookies.userId;
   const proId = req.body.productId;
   try {
     let producty = await product.findOne({where: {id:proId}});
@@ -175,7 +176,7 @@ module.exports.changeQuantity = async (req, res, _next) => {
 };
 module.exports.getSearch = async (req, res, _next) => {
   const nameProduct = req.params.nameProduct;
-  const sellerId = 1;//req.cookies.sellerId;
+  const sellerId =  req.cookies.sellerId;
   if (sellerId) {
     try {
       const allProduct = await product.findAll({
@@ -237,7 +238,7 @@ module.exports.getSearch = async (req, res, _next) => {
   }
 };
 module.exports.postpaid = async (req, res, _next) => {
-  const userId = 1; //req.cookies.userId;
+  const userId = req.cookies.userId;
   const { totalBill, privateNumber } = req.body;
   let User = await bank.findAll({ where: { token: privateNumber } });
   let user = User[0];
@@ -265,6 +266,7 @@ module.exports.postpaid = async (req, res, _next) => {
           StoreBalance(ord.productId, ord.quantity);
           setNote(ord.id);
         });
+        schedule(userId);
         res.status(200).json({ message: "Payment successful" });
       })
       .catch((err) => {
@@ -273,13 +275,14 @@ module.exports.postpaid = async (req, res, _next) => {
   }
 };
 module.exports.postRate = async (req, res, _next) => {
-  const rate = req.body.rate;
+  const rate1 = req.body.rate;
+  const rate = parseFloat(rate1);
   const proId = req.body.productId;
   const userId = req.cookies.userId;
   let order = await Order.findOne({where: {customerId : userId, productId: proId, paid: true}}); 
   product.findOne({ where: { id: proId } }).then((pro) => {
     let average =
-      (pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1);
+      ((pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1)).toFixed(2);
     let NumberOfRate = pro.NumberOfRating + 1;
     pro
       .update({ AvgOfRating: average, NumberOfRating: NumberOfRate })
@@ -387,7 +390,7 @@ module.exports.getProfile = (req, res, _next) => {
     });
 };
 module.exports.getNote = async (req, res, _next) =>{
-  const sellerId = 1;//req.cookies.sellerId;
+  const sellerId = req.cookies.sellerId;
   try{
     let Noti = await Notification.findAll({where:{StoreId: sellerId}});
     res.status(200).json(Noti);
@@ -396,7 +399,7 @@ module.exports.getNote = async (req, res, _next) =>{
   }
 }
 module.exports.getHistory = async (req, res, _next) =>{
-  const userId = 1; //req.cookies.userId; 
+  const userId = req.cookies.userId; 
   let ProductName;
   try{
     let History = await Order.findAll({
