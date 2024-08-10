@@ -33,7 +33,7 @@ module.exports.postLogin = async (req, res, _next) => {
   if (seller) {
     const isValid = await bcrypt.compare(password, seller.password);
     if (isValid) {
-      bank.findOne({ where: { Semail: store.email } }).then((privateNumb) => {
+      bank.findOne({ where: { Semail: seller.email } }).then((privateNumb) => {
         let privateNumber = privateNumb.token;
         const token = createToken(seller.id);
         res.cookie("token", token, { httpOnly: true });

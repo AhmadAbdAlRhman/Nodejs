@@ -69,7 +69,6 @@ module.exports.postAddProduct = async (req, res, _next) => {
     kind: Kind,
   };
   if (store) {
-    console.log("Ahmad");
     try {
       await product
         .create(productsData)
@@ -86,11 +85,11 @@ module.exports.postAddProduct = async (req, res, _next) => {
         })
         .then(async () => {
           if (productCount <= 50) {
-            await store.update((store.balance -= (10 * store.balance) / 100));
+            await store.save((store.balance -= (10 * productPrice) / 100));
           } else if (productCount <= 100 && productCount > 50) {
-            await store.update((store.balance -= (20 * store.balance) / 100));
+            await store.save((store.balance -= (20 * productPrice) / 100));
           } else {
-            await store.save((store.balance -= (30 * store.balance) / 100));
+            await store.save((store.balance -= (30 * productPrice) / 100));
           }
           res.status(200).json("The Product is added");
         });

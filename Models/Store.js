@@ -15,16 +15,6 @@ const Store = sequelize.define(
       unique: true,
       allowNull: false,
     },
-    StoreLogo: {
-      type: Sequelize.STRING,
-      unique: true,
-      allowNull: true,
-    },
-    StoreAge: {
-      type: Sequelize.INTEGER,
-      unique: false,
-      allowNull: true,
-    },
     StoreLocation: {
       type: Sequelize.STRING,
       unique: true,
@@ -54,16 +44,6 @@ const Store = sequelize.define(
       type: Sequelize.STRING(100),
       AllowNull: true,
       unique: true,
-    },
-    NumberOfFollowers: {
-      type: Sequelize.INTEGER,
-      defaultValue: 0,
-      unique: false,
-    },
-    NumberOfEmpty: {
-      type: Sequelize.INTEGER,
-      AllowNull: true,
-      unique: false,
     },
   },
   {

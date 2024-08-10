@@ -26,6 +26,7 @@ app.use(express.json()); //this is to accept data in json format
 app.use(express.urlencoded({ extended: true })); //this is basically to decode the data send through html form
 app.use(bodyParser.urlencoded({ extended: true })); //body-parser is a middleware in Express designed to handle and parse data sent in the body of HTTP requests.
 const rout = require("./rout/route");
+require("./controller/schedule");
 const store = require("./rout/store");
 app.use(rout);
 app.use(store);

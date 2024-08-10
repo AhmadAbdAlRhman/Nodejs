@@ -39,6 +39,16 @@ const Notifications = sequelize.define("note", {
     allowedNull : true,
     unique: false
   },
+  address:{
+    type:Sequelize.STRING,
+    allowedNull : true,
+    unique: false
+  },
+  phone:{
+    type:Sequelize.STRING,
+    allowedNull : true,
+    unique: false
+  },
   ProductId: {
     type: Sequelize.INTEGER,
     references: {

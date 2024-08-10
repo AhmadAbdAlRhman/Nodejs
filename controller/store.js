@@ -19,6 +19,8 @@ setNote = async (OrderId) => {
     OrderId: OrderId,
     customer_first: customer.first_name,
     customer_second: customer.second_name,
+    address: customer.address,
+    phone: customer.telephone,
     product:producty,
   };
   Notification.create(NoteData);
@@ -270,16 +272,20 @@ module.exports.postpaid = async (req, res, _next) => {
       });
   }
 };
-module.exports.postRate = (req, res, _next) => {
+module.exports.postRate = async (req, res, _next) => {
   const rate = req.body.rate;
   const proId = req.body.productId;
+  const userId = req.cookies.userId;
+  let order = await Order.findOne({where: {customerId : userId, productId: proId, paid: true}}); 
   product.findOne({ where: { id: proId } }).then((pro) => {
     let average =
       (pro.AvgOfRating * pro.NumberOfRating + rate) / (pro.NumberOfRating + 1);
     let NumberOfRate = pro.NumberOfRating + 1;
     pro
       .update({ AvgOfRating: average, NumberOfRating: NumberOfRate })
-      .then(() => {
+      .then(async() => {
+        order.isRating = true;
+        await order.save();
         res.status(200).json("Success");
       })
       .catch((err) => {
@@ -391,9 +397,18 @@ module.exports.getNote = async (req, res, _next) =>{
 }
 module.exports.getHistory = async (req, res, _next) =>{
   const userId = 1; //req.cookies.userId; 
+  let ProductName;
   try{
-    let History = await Order.findAll({where:{customerId: userId , paid : true}});
-    res.status(200).json(History);
+    let History = await Order.findAll({
+    where:{customerId: userId , paid : true} , 
+    });
+    const result = await Promise.all(
+      History.map(async (his) => {
+        ProductName = await product.findAll({where:{id:his.productId} , attributes:["AvgOfRating","name"]}); 
+        return { ...his.toJSON(), ProductName };
+      })
+    );
+  res.status(200).json(result);
   }catch(err){
     res.status(404).json(err);
   }
