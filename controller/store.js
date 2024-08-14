@@ -397,7 +397,7 @@ module.exports.getNote = async (req, res, _next) =>{
   }catch(err){
     res.status(404).json(err);
   }
-}
+} 
 module.exports.getHistory = async (req, res, _next) =>{
   const userId = req.cookies.userId; 
   let ProductName;
@@ -407,7 +407,7 @@ module.exports.getHistory = async (req, res, _next) =>{
     });
     const result = await Promise.all(
       History.map(async (his) => {
-        ProductName = await product.findAll({where:{id:his.productId} , attributes:["AvgOfRating","name"]}); 
+        ProductName = await product.findAll({where:{id:his.productId} , attributes:["name"]}); 
         return { ...his.toJSON(), ProductName };
       })
     );
